@@ -460,9 +460,8 @@ namespace StreamChats
         }
         private void viewerAutoRefreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            timer.Stop();
             // Display a message box to input the amount of time between YouTube Viewer Count refreshes
-            string AutoRefresh = Microsoft.VisualBasic.Interaction.InputBox("Enter amount of time between viewer count updates\n\nThe lower the time, the more API requests will be made. Don't go over your API limits.\n\nCurrent Time: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "ViewerRefreshTimer", null), "Auto Refresh");
+            string AutoRefresh = Microsoft.VisualBasic.Interaction.InputBox("Enter amount of time (in ms) between auto viewer count updates\n\nThe lower the time, the more API requests will be made. Don't go over your API limits.\n\nCurrent Time: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "ViewerRefreshTimer", null) + "ms", "Auto Refresh");
 
             // If the user clicked the "OK" button
             if (!string.IsNullOrEmpty(AutoRefresh))
@@ -473,7 +472,6 @@ namespace StreamChats
                 timer.Interval = double.Parse(timerRegistry);
                 key.Close();
             }
-            timer.Start();
         }
         private void YouTubeViewers_Label_Click(object sender, EventArgs e)
         {
