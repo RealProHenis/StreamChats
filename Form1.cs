@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Web.WebView2.WinForms;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
+using Google.Apis.YouTube.v3.Data;
 
 namespace StreamChats
 {
@@ -113,13 +114,20 @@ namespace StreamChats
             // Attempts to get the currently public YouTube livestream chat of the selected YouTube channel if configured
             if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) != null)
             {
-                try
+                if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
                 {
-                    GetYouTubeLivestream();
+                    try
+                    {
+                        GetYouTubeLivestream();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"ERROR: {ex.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"ERROR: {ex.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // If no YouTube API Key set yet, nothing needs to be done
                 }
             }
             else
@@ -210,50 +218,33 @@ namespace StreamChats
         // Gets the currently public YouTube livestream of the YouTube channel that the user configures
         public int GetYouTubeLivestream()
         {
-            // Get the channel ID from the registry
-            var regKey = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
-            var channelId = regKey?.GetValue("YouTubeChannelID") as string;
-            if (string.IsNullOrEmpty(channelId))
-            {
-                MessageBox.Show("ERROR: YouTubeChannelID is not set in the registry", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return 0;
-            }
-
+            // Set up the YouTube API service
             string APIKey = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", "").ToString();
-            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
-            if (key != null && key.GetValue("YouTubeAPIKey") != null)
+            var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                // Set up the YouTube API service
-                var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-                {
-                    ApiKey = APIKey,
-                    ApplicationName = this.GetType().ToString()
-                });
+                ApiKey = APIKey,
+                ApplicationName = this.GetType().ToString()
+            });
 
-                // Make the API call to get the live video
-                var searchListRequest = youtubeService.Search.List("snippet");
-                searchListRequest.ChannelId = channelId;
-                searchListRequest.EventType = SearchResource.ListRequest.EventTypeEnum.Live;
-                searchListRequest.Type = "video";
-                searchListRequest.MaxResults = 1;
-                var searchListResponse = searchListRequest.Execute();
+            // Make the API call to get the live video
+            string channelID = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", "").ToString();
+            var searchListRequest = youtubeService.Search.List("snippet");
+            searchListRequest.ChannelId = channelID;
+            searchListRequest.EventType = SearchResource.ListRequest.EventTypeEnum.Live;
+            searchListRequest.Type = "video";
+            searchListRequest.MaxResults = 1;
+            var searchListResponse = searchListRequest.Execute();
 
-                // Set the video ID to the label
-                var video = searchListResponse.Items.FirstOrDefault();
-                if (video != null)
-                {
-                    webView2_YouTube.Source = new Uri("https://www.youtube.com/live_chat?is_popout=1&v=" + video.Id.VideoId);
-                    return 1;
-                }
-                else
-                {
-                    webView2_YouTube.Source = new Uri("https://www.youtube.com/channel/" + channelId + "/live");
-                    return 0;
-                }
+            // Set the video ID to the label
+            var video = searchListResponse.Items.FirstOrDefault();
+            if (video != null)
+            {
+                webView2_YouTube.Source = new Uri("https://www.youtube.com/live_chat?is_popout=1&v=" + video.Id.VideoId);
+                return 1;
             }
             else
             {
-                MessageBox.Show("ERROR: No YouTube API Key Found", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                webView2_YouTube.Source = new Uri("https://www.youtube.com/channel/" + channelID + "/live");
                 return 0;
             }
         }
@@ -404,7 +395,14 @@ namespace StreamChats
                 key.SetValue("YouTubeChannelURL", channelUrl);
                 key.Close();
                 GetYouTubeChannelID();
-                GetYouTubeLivestream();
+                if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
+                {
+                    GetYouTubeLivestream();
+                }
+                else
+                {
+                    webView2_YouTube.Source = new Uri("https://www.youtube.com/channel/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) as string);
+                }
             }
         }
         private void twitchChannelToolStripMenuItem_Click(object sender, EventArgs e)
@@ -481,24 +479,44 @@ namespace StreamChats
         {
             if (YouTubeViewers_Label.Text.Contains("*Click To Show Viewer Count*"))
             {
-                // Check if a YouTube livestream exists
-                int result = GetYouTubeLivestream();
-                if (result == 0)
+                // Check if a YouTube channel exists
+                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
+                if (key != null)
                 {
-                    MessageBox.Show("ERROR: No public livestream found on the configured YouTube channel", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    YouTubeViewers_Label.Font = new Font(YouTubeViewers_Label.Font.FontFamily, 10, YouTubeViewers_Label.Font.Style);
-                    YouTubeViewers_Label.Font = new Font(YouTubeViewers_Label.Font, FontStyle.Regular);
-                    UpdateYouTubeViewers();
-                    if (timer.Enabled)
+                    if (key.GetValue("YouTubeChannelID") != null)
                     {
-                        // Do nothing
+                        if (key.GetValue("YouTubeAPIKey") != null)
+                        {
+                            // Check if a YouTube livestream exists
+                            int result = GetYouTubeLivestream();
+                            if (result == 0)
+                            {
+                                MessageBox.Show("ERROR: No public livestream found on the configured YouTube channel", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
+                            else
+                            {
+                                YouTubeViewers_Label.Font = new Font(YouTubeViewers_Label.Font.FontFamily, 10, YouTubeViewers_Label.Font.Style);
+                                YouTubeViewers_Label.Font = new Font(YouTubeViewers_Label.Font, FontStyle.Regular);
+                                UpdateYouTubeViewers();
+                                if (timer.Enabled)
+                                {
+                                    // Do nothing
+                                }
+                                else
+                                {
+                                    timer.Start();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("ERROR: Please enter your YouTube API Key under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }    
                     }
                     else
                     {
-                        timer.Start();
+                        MessageBox.Show("ERROR: Please enter your YouTube Channel URL under the Accounts tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
@@ -524,24 +542,48 @@ namespace StreamChats
         {
             if (TwitchViewers_Label.Text.Contains("*Click To Show Viewer Count*"))
             {
-                // Check if Twitch channel is live
-                int result = UpdateTwitchViewers();
-                if (result == 0)
+                // Check if a Twitch channel exists
+                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
+                if (key != null)
                 {
-                    MessageBox.Show("ERROR: Twitch channel (" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + ") is not live", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font.FontFamily, 10, TwitchViewers_Label.Font.Style);
-                    TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font, FontStyle.Regular);
-                    UpdateTwitchViewers();
-                    if (timer.Enabled)
+                    if (key.GetValue("TwitchChannel") != null)
                     {
-                        // Do nothing
+                        if (key != null)
+                        {
+                            bool twitchClientIDExists = Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchClientID", null) != null;
+                            bool twitchAccessTokenExists = Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchAccessToken", null) != null;
+                            if (twitchClientIDExists && twitchAccessTokenExists)
+                            {
+                                // Check if Twitch channel is live
+                                int result = UpdateTwitchViewers();
+                                if (result == 0)
+                                {
+                                    MessageBox.Show("ERROR: Twitch channel (" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + ") is not live", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+                                else
+                                {
+                                    TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font.FontFamily, 10, TwitchViewers_Label.Font.Style);
+                                    TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font, FontStyle.Regular);
+                                    UpdateTwitchViewers();
+                                    if (timer.Enabled)
+                                    {
+                                        // Do nothing
+                                    }
+                                    else
+                                    {
+                                        timer.Start();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show("ERROR: Please enter both your Twitch Access Token & Twitch Client ID under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
                     }
                     else
                     {
-                        timer.Start();
+                        MessageBox.Show("ERROR: Please enter your Twitch channel name under the Accounts tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
@@ -646,8 +688,8 @@ namespace StreamChats
 
         private void resetAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string ConfirmReset = Microsoft.VisualBasic.Interaction.InputBox("Do you want to reset all Stream Chat settings?\n\nThis includes all chat settings, accounts, and security\n(this data will be deleted from your computer)\n\nType y for Yes or n for No", "Reset");
-            if (ConfirmReset == "y")
+            DialogResult result = MessageBox.Show("Do you want to reset all Stream Chat settings?\n\nThis includes all chat settings, accounts, and security\n(this data will be deleted from your computer)", "Reset", MessageBoxButtons.YesNo);
+            if (result == DialogResult.Yes)
             {
                 RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\StreamChats", true);
                 if (key != null)
@@ -655,20 +697,7 @@ namespace StreamChats
                     key.DeleteSubKeyTree("");
                 }
             }
-            else if (ConfirmReset == "n")
-            {
-                // Do nothing
-            }
-            else if (ConfirmReset == "")
-            {
-                // Do nothing
-            }
-            else
-            {
-                MessageBox.Show("ERROR: Please enter just a Y or N", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
-
         private void timerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (timer.Enabled)
@@ -703,6 +732,46 @@ namespace StreamChats
             RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
             key.SetValue("FacebookChatZoom", new_zoom);
             key.Close();
+        }
+        private void checkForYouTubeLivestreamToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) != null)
+            {
+                if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
+                {
+                    // Check if a YouTube livestream exists
+                    int result = GetYouTubeLivestream();
+                    if (result == 0)
+                    {
+                        MessageBox.Show("ERROR: No public livestream found on the configured YouTube channel", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    else
+                    {
+                        // Do nothing
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("ERROR: Please enter your YouTube API Key under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Please enter your YouTube Channel URL under the Accounts tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private void checkForTwitchChannelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) != null)
+            {
+                webView2_Twitch.Source = new Uri("https://www.twitch.tv/popout/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + "/chat?popout=");
+                
+            }
+            else
+            {
+                MessageBox.Show("ERROR: Please enter your Twitch name under the Accounts tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

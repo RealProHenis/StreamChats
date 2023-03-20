@@ -32,10 +32,12 @@
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.chatsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.youTubeChatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.checkForLivestreamToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomInToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomOutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.twitchChatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.checkForLivestreamToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomInToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomOutToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.resetZoomToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -43,6 +45,7 @@
             this.zoomInToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomOutToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.resetZoomToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.checkForLivestreamToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.accountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.youTubeChannelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -98,6 +101,7 @@
             // youTubeChatToolStripMenuItem
             // 
             this.youTubeChatToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.checkForLivestreamToolStripMenuItem,
             this.zoomInToolStripMenuItem,
             this.zoomOutToolStripMenuItem,
             this.resetZoomToolStripMenuItem});
@@ -105,36 +109,51 @@
             this.youTubeChatToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
             this.youTubeChatToolStripMenuItem.Text = "YouTube Chat";
             // 
+            // checkForLivestreamToolStripMenuItem
+            // 
+            this.checkForLivestreamToolStripMenuItem.Name = "checkForLivestreamToolStripMenuItem";
+            this.checkForLivestreamToolStripMenuItem.Size = new System.Drawing.Size(205, 24);
+            this.checkForLivestreamToolStripMenuItem.Text = "Check For Livestream";
+            this.checkForLivestreamToolStripMenuItem.Click += new System.EventHandler(this.checkForYouTubeLivestreamToolStripMenuItem_Click);
+            // 
             // zoomInToolStripMenuItem
             // 
             this.zoomInToolStripMenuItem.Name = "zoomInToolStripMenuItem";
-            this.zoomInToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
+            this.zoomInToolStripMenuItem.Size = new System.Drawing.Size(205, 24);
             this.zoomInToolStripMenuItem.Text = "Zoom In";
             this.zoomInToolStripMenuItem.Click += new System.EventHandler(this.youtubeZoomInToolStripMenuItem_Click);
             // 
             // zoomOutToolStripMenuItem
             // 
             this.zoomOutToolStripMenuItem.Name = "zoomOutToolStripMenuItem";
-            this.zoomOutToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
+            this.zoomOutToolStripMenuItem.Size = new System.Drawing.Size(205, 24);
             this.zoomOutToolStripMenuItem.Text = "Zoom Out";
             this.zoomOutToolStripMenuItem.Click += new System.EventHandler(this.youtubeZoomOutToolStripMenuItem_Click);
             // 
             // resetZoomToolStripMenuItem
             // 
             this.resetZoomToolStripMenuItem.Name = "resetZoomToolStripMenuItem";
-            this.resetZoomToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
+            this.resetZoomToolStripMenuItem.Size = new System.Drawing.Size(205, 24);
             this.resetZoomToolStripMenuItem.Text = "Reset Zoom";
             this.resetZoomToolStripMenuItem.Click += new System.EventHandler(this.resetYouTubeZoomToolStripMenuItem_Click);
             // 
             // twitchChatToolStripMenuItem
             // 
             this.twitchChatToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.checkForLivestreamToolStripMenuItem1,
             this.zoomInToolStripMenuItem1,
             this.zoomOutToolStripMenuItem1,
             this.resetZoomToolStripMenuItem1});
             this.twitchChatToolStripMenuItem.Name = "twitchChatToolStripMenuItem";
             this.twitchChatToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
             this.twitchChatToolStripMenuItem.Text = "Twitch Chat";
+            // 
+            // checkForLivestreamToolStripMenuItem1
+            // 
+            this.checkForLivestreamToolStripMenuItem1.Name = "checkForLivestreamToolStripMenuItem1";
+            this.checkForLivestreamToolStripMenuItem1.Size = new System.Drawing.Size(198, 24);
+            this.checkForLivestreamToolStripMenuItem1.Text = "Go To Channel Chat";
+            this.checkForLivestreamToolStripMenuItem1.Click += new System.EventHandler(this.checkForTwitchChannelToolStripMenuItem_Click);
             // 
             // zoomInToolStripMenuItem1
             // 
@@ -160,6 +179,7 @@
             // facebookChatToolStripMenuItem
             // 
             this.facebookChatToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.checkForLivestreamToolStripMenuItem2,
             this.zoomInToolStripMenuItem2,
             this.zoomOutToolStripMenuItem2,
             this.resetZoomToolStripMenuItem2});
@@ -170,29 +190,35 @@
             // zoomInToolStripMenuItem2
             // 
             this.zoomInToolStripMenuItem2.Name = "zoomInToolStripMenuItem2";
-            this.zoomInToolStripMenuItem2.Size = new System.Drawing.Size(198, 24);
+            this.zoomInToolStripMenuItem2.Size = new System.Drawing.Size(205, 24);
             this.zoomInToolStripMenuItem2.Text = "Zoom In";
             this.zoomInToolStripMenuItem2.Click += new System.EventHandler(this.facebookZoomInToolStripMenuItem1_Click);
             // 
             // zoomOutToolStripMenuItem2
             // 
             this.zoomOutToolStripMenuItem2.Name = "zoomOutToolStripMenuItem2";
-            this.zoomOutToolStripMenuItem2.Size = new System.Drawing.Size(198, 24);
+            this.zoomOutToolStripMenuItem2.Size = new System.Drawing.Size(205, 24);
             this.zoomOutToolStripMenuItem2.Text = "Zoom Out";
             this.zoomOutToolStripMenuItem2.Click += new System.EventHandler(this.facebookZoomOutToolStripMenuItem1_Click);
             // 
             // resetZoomToolStripMenuItem2
             // 
             this.resetZoomToolStripMenuItem2.Name = "resetZoomToolStripMenuItem2";
-            this.resetZoomToolStripMenuItem2.Size = new System.Drawing.Size(198, 24);
+            this.resetZoomToolStripMenuItem2.Size = new System.Drawing.Size(205, 24);
             this.resetZoomToolStripMenuItem2.Text = "Reset Zoom";
             this.resetZoomToolStripMenuItem2.Click += new System.EventHandler(this.resetFacebookZoomToolStripMenuItem_Click);
+            // 
+            // checkForLivestreamToolStripMenuItem2
+            // 
+            this.checkForLivestreamToolStripMenuItem2.Name = "checkForLivestreamToolStripMenuItem2";
+            this.checkForLivestreamToolStripMenuItem2.Size = new System.Drawing.Size(205, 24);
+            this.checkForLivestreamToolStripMenuItem2.Text = "Check For Livestream";
             // 
             // refreshAllToolStripMenuItem
             // 
             this.refreshAllToolStripMenuItem.Name = "refreshAllToolStripMenuItem";
             this.refreshAllToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
-            this.refreshAllToolStripMenuItem.Text = "Refresh All";
+            this.refreshAllToolStripMenuItem.Text = "Refresh All Chats";
             this.refreshAllToolStripMenuItem.Click += new System.EventHandler(this.refreshAllToolStripMenuItem_Click);
             // 
             // accountsToolStripMenuItem
@@ -447,5 +473,8 @@
         private ToolStripMenuItem resetZoomToolStripMenuItem;
         private ToolStripMenuItem resetZoomToolStripMenuItem1;
         private ToolStripMenuItem resetZoomToolStripMenuItem2;
+        private ToolStripMenuItem checkForLivestreamToolStripMenuItem;
+        private ToolStripMenuItem checkForLivestreamToolStripMenuItem1;
+        private ToolStripMenuItem checkForLivestreamToolStripMenuItem2;
     }
 }
