@@ -7,6 +7,6 @@ You need your own YouTube Data v3 API Key (https://console.cloud.google.com/apis
 
 # Known Issues:
 
--Facebook chat isn't working since that requires FB to review & approve my developer app which I haven't bothered to follow through on
+-Facebook chat isn't working since that requires FB to review & approve my developer app which I haven't bothered to follow through on and tbh have no idea how to do
 
 -The security on this is BAD. All sensitive data (API keys & secrets) are stored in plain text in the current users registry editor. Once I learn how to do hash functions or whatever, I can improve this
