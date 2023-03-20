@@ -1,5 +1,5 @@
 # StreamChats
-A very simple program that puts YouTube, Twitch, &amp; Facebook chats side-by-side to easily read when multistreaming
+A very simple program that puts YouTube, Twitch, &amp; Facebook chats side-by-side to easily read when multistreaming. I hate the lack of customization on alternative restreaming chat programs, so I decided to make this instead
 
 # Requirements:
 
