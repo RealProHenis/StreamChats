@@ -3,7 +3,7 @@ A very simple program that puts YouTube, Twitch, &amp; Facebook chats side-by-si
 
 # Requirements:
 
-You need your own YouTube Data v3 API Key (https://console.cloud.google.com/apis/api/youtube.googleapis.com/metrics) and your own Twitch Access Token & Twitch Client Secret. (https://dev.twitch.tv/console, https://twitchtokengenerator.com)
+In order to get live viewer counts, you need your own YouTube Data v3 API Key (https://console.cloud.google.com/apis/api/youtube.googleapis.com/metrics) and your own Twitch Access Token & Twitch Client Secret. (https://dev.twitch.tv/console, https://twitchtokengenerator.com)
 
 # Known Issues:
 
