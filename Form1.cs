@@ -5,13 +5,8 @@ using Google.Apis.YouTube.v3;
 using Microsoft.Win32;
 using System.Net;
 using System.Text.RegularExpressions;
-using Microsoft.Web.WebView2.WinForms;
 using System.Text.Json;
-using Microsoft.Web.WebView2.Core;
-using Google.Apis.YouTube.v3.Data;
 using System.Diagnostics;
-using System.Security.Policy;
-using System;
 
 namespace StreamChats
 {
