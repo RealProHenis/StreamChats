@@ -9,12 +9,18 @@ using Microsoft.Web.WebView2.WinForms;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
 using Google.Apis.YouTube.v3.Data;
+using System.Diagnostics;
+using System.Security.Policy;
+using System;
 
 namespace StreamChats
 {
     public partial class Form1 : Form
     {
         private System.Timers.Timer timer;
+        private string YouTubeChatURL = "";
+        private string TwitchChatURL = "";
+        private string FacebookChatURL = "https://business.facebook.com/live/producer/";
         public Form1()
         {
             InitializeComponent();
@@ -151,16 +157,8 @@ namespace StreamChats
                         MessageBox.Show($"ERROR: {ex.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
 
-                    string TwitchURL = "";
-                    if (!string.IsNullOrEmpty(TwitchChannel))
-                    {
-                        TwitchURL = "https://www.twitch.tv/popout/" + TwitchChannel + "/chat?popout=";
-                    }
-                    else
-                    {
-                        TwitchURL = "https://www.twitch.tv";
-                    }
-                    webView2_Twitch.Source = new Uri(TwitchURL);
+                    TwitchChatURL = "https://www.twitch.tv/popout/" + TwitchChannel + "/chat?popout=";
+                    webView2_Twitch.Source = new Uri(TwitchChatURL);
                 }
                 catch (Exception ex)
                 {
@@ -239,7 +237,8 @@ namespace StreamChats
             var video = searchListResponse.Items.FirstOrDefault();
             if (video != null)
             {
-                webView2_YouTube.Source = new Uri("https://www.youtube.com/live_chat?is_popout=1&v=" + video.Id.VideoId);
+                YouTubeChatURL = "https://www.youtube.com/live_chat?is_popout=1&v=" + video.Id.VideoId;
+                webView2_YouTube.Source = new Uri(YouTubeChatURL);
                 return 1;
             }
             else
@@ -386,13 +385,18 @@ namespace StreamChats
         private void youTubeChannelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Display a message box to input the YouTube channel URL.
-            string channelUrl = Microsoft.VisualBasic.Interaction.InputBox("Enter your YouTube channel URL\n\nCurrent YouTube Channel: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "YouTubeChannelURL", null), "YouTube Channel URL");
+            string channelURL = Microsoft.VisualBasic.Interaction.InputBox("Enter your YouTube channel URL\n\nCurrent YouTube Channel: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "YouTubeChannelURL", null), "YouTube Channel URL");
 
             // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
-            if (!string.IsNullOrEmpty(channelUrl))
+            if (!string.IsNullOrEmpty(channelURL))
             {
+                if (!channelURL.StartsWith("http://") && !channelURL.StartsWith("https://"))
+                {
+                    channelURL = "https://" + channelURL;
+                }
+
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
-                key.SetValue("YouTubeChannelURL", channelUrl);
+                key.SetValue("YouTubeChannelURL", channelURL);
                 key.Close();
                 GetYouTubeChannelID();
                 if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
@@ -417,6 +421,7 @@ namespace StreamChats
                 key.SetValue("TwitchChannel", channelUrl);
                 key.Close();
                 webView2_Twitch.Source = new Uri("https://www.twitch.tv/popout/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + "/chat?popout=");
+                TwitchChatURL = "https://www.twitch.tv/popout/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + "/chat?popout=";
             }
         }
         private void youTubeAPIKeyToolStripMenuItem_Click(object sender, EventArgs e)
@@ -770,6 +775,58 @@ namespace StreamChats
             {
                 MessageBox.Show("ERROR: Please enter your Twitch name under the Accounts tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        private void openBrowserTabsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) != null)
+            {
+                if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
+                {
+                    int result = GetYouTubeLivestream();
+                    if (result == 0)
+                    {
+                        // Do nothing
+                    }
+                    else
+                    {
+                        ProcessStartInfo YouTubeChat = new ProcessStartInfo
+                        {
+                            FileName = YouTubeChatURL,
+                            UseShellExecute = true
+                        };
+                        Process.Start(YouTubeChat);
+                    }
+                }
+                else
+                {
+                    // Do nothing
+                }
+            }
+            else
+            {
+                // Do nothing
+            }
+
+            if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) != null)
+            {
+                ProcessStartInfo TwitchChat = new ProcessStartInfo
+                {
+                    FileName = TwitchChatURL,
+                    UseShellExecute = true
+                };
+                Process.Start(TwitchChat);
+            }
+            else
+            {
+                // Do nothing
+            }
+
+            ProcessStartInfo FacebookChat = new ProcessStartInfo
+            {
+                FileName = FacebookChatURL,
+                UseShellExecute = true
+            };
+            Process.Start(FacebookChat);
         }
     }
 }
