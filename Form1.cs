@@ -16,6 +16,7 @@ namespace StreamChats
     {
         private System.Timers.Timer timer;
         private string YouTubeChatURL = "";
+        private string YouTubeDefaultChatURL = "";
         private string TwitchChatURL = "";
         private string FacebookChatURL = "";
         private string KickChatURL = "";
@@ -127,6 +128,7 @@ namespace StreamChats
             // Attempts to get the currently public YouTube livestream chat of the selected YouTube channel if configured
             if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) != null)
             {
+                YouTubeDefaultChatURL = "https://www.youtube.com/channel/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) as string + "/live";
                 YouTubeDashboardURL = "https://studio.youtube.com/channel/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) as string + "/livestreaming/manage";
                 if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
                 {
@@ -581,7 +583,12 @@ namespace StreamChats
                     int result = GetYouTubeLivestream();
                     if (result == 0)
                     {
-                        // Do nothing
+                        ProcessStartInfo YouTubeDefaultChat = new ProcessStartInfo
+                        {
+                            FileName = YouTubeDefaultChatURL,
+                            UseShellExecute = true
+                        };
+                        Process.Start(YouTubeDefaultChat);
                     }
                     else
                     {
@@ -724,13 +731,14 @@ namespace StreamChats
                 key.SetValue("YouTubeChannelURL", channelURL);
                 key.Close();
                 GetYouTubeChannelID();
+                YouTubeDefaultChatURL = "https://www.youtube.com/channel/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) as string + "/live";
                 if (Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeAPIKey", null) != null)
                 {
                     GetYouTubeLivestream();
                 }
                 else
                 {
-                    webView2_YouTube.Source = new Uri("https://www.youtube.com/channel/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) as string);
+                    webView2_YouTube.Source = new Uri("https://www.youtube.com/channel/" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "YouTubeChannelID", null) as string + "/live");
                 }
             }
         }
