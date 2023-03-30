@@ -7,8 +7,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Diagnostics;
-using HtmlAgilityPack;
-using static System.Net.WebRequestMethods;
+using System;
 
 namespace StreamChats
 {
@@ -290,10 +289,18 @@ namespace StreamChats
                                     if (json.items.Count > 0 && json.items[0].liveStreamingDetails != null)
                                     {
                                         string concurrentViewers = json.items[0].liveStreamingDetails.concurrentViewers;
-                                        this.BeginInvoke(new Action(() =>
+                                        if (int.TryParse(concurrentViewers, out int num))
                                         {
-                                            YouTubeViewers_Label.Text = "YouTube Viewers: " + concurrentViewers;
-                                        }));
+                                            string formattedViewers = num.ToString("N0"); //format number with commas
+                                            this.BeginInvoke(new Action(() =>
+                                            {
+                                                YouTubeViewers_Label.Text = "YouTube Viewers: " + formattedViewers;
+                                            }));
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Invalid number string."); //output error message if the string cannot be parsed
+                                        }
                                     }
                                 }
                                 catch (HttpRequestException ex)
@@ -325,87 +332,130 @@ namespace StreamChats
         // Updates the concurrent viewer count of the Twitch livestream
         public int UpdateTwitchViewers()
         {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
-            if (key != null)
+            // Set up the API request
+            string TwitchChannel = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", "").ToString();
+            string url = $"https://api.twitch.tv/helix/streams?user_login={TwitchChannel}";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+            string TwitchAccessToken = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchAccessToken", "").ToString();
+            string TwitchClientID = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchClientID", "").ToString();
+            request.Headers.Add("Authorization", $"Bearer {TwitchAccessToken}");
+            request.Headers.Add("Client-Id", $"{TwitchClientID}");
+
+            try
             {
-                // Check if the TwitchChannel value exists
-                if (key.GetValue("TwitchChannel") != null)
+                // Make the API request and get the response
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream responseStream = response.GetResponseStream();
+                StreamReader reader = new StreamReader(responseStream);
+                string responseJson = reader.ReadToEnd();
+
+                // Parse the JSON response to get the viewer count
+                JsonDocument responseObj = JsonDocument.Parse(responseJson);
+                int viewerCount = responseObj.RootElement.GetProperty("data")[0].GetProperty("viewer_count").GetInt32();
+                string formattedViewers = string.Format("{0:N0}", viewerCount);
+
+                // Set the label text to the viewer count
+                TwitchViewers_Label.Invoke((MethodInvoker)(() => TwitchViewers_Label.Text = "Twitch Viewers: " + formattedViewers));
+
+                // Clean up resources
+                reader.Close();
+                responseStream.Close();
+                response.Close();
+
+                return viewerCount;
+            }
+            catch (WebException ex)
+            {
+                // Check if the response status code is 401 Unauthorized
+                HttpWebResponse response = (HttpWebResponse)ex.Response;
+                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    if (key.GetValue("TwitchAccessToken") != null && key.GetValue("TwitchClientID") != null)
-                    {
-                        // Set up the API request
-                        string TwitchChannel = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", "").ToString();
-                        string url = $"https://api.twitch.tv/helix/streams?user_login={TwitchChannel}";
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                        request.Method = "GET";
-                        string TwitchAccessToken = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchAccessToken", "").ToString();
-                        string TwitchClientID = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchClientID", "").ToString();
-                        request.Headers.Add("Authorization", $"Bearer {TwitchAccessToken}");
-                        request.Headers.Add("Client-Id", $"{TwitchClientID}");
-
-                        try
-                        {
-                            // Make the API request and get the response
-                            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                            Stream responseStream = response.GetResponseStream();
-                            StreamReader reader = new StreamReader(responseStream);
-                            string responseJson = reader.ReadToEnd();
-
-                            // Parse the JSON response to get the viewer count
-                            JsonDocument responseObj = JsonDocument.Parse(responseJson);
-                            int viewerCount = responseObj.RootElement.GetProperty("data")[0].GetProperty("viewer_count").GetInt32();
-
-                            // Set the label text to the viewer count
-                            TwitchViewers_Label.Invoke((MethodInvoker)(() => TwitchViewers_Label.Text = "Twitch Viewers: " + viewerCount.ToString()));
-
-                            // Clean up resources
-                            reader.Close();
-                            responseStream.Close();
-                            response.Close();
-
-                            return viewerCount;
-                        }
-                        catch (System.IndexOutOfRangeException)
-                        {
-                            return 0;
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("ERROR: Please enter your Twitch Access Token & Twitch Client ID under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    return -2;
                 }
                 else
                 {
-                    MessageBox.Show("ERROR: Please enter your Twitch name under the Accounts tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("ERROR: " + ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                key.Close();
+                
             }
-
+            catch (System.IndexOutOfRangeException)
+            {
+                return 0;
+            }
             return -1;
         }
-        public async void UpdateKickViewers()
+        public static void GetTwitchRefreshToken()
         {
-            HttpClient client = new HttpClient();
+            string clientId = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchClientID", null) as string;
+            string clientSecret = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchClientSecret", null) as string;
+            string refreshToken = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchRefreshToken", null) as string;
+            string url = "https://id.twitch.tv/oauth2/token";
 
-            string url = "https://kick.com/roshtein";
-            string html = await client.GetStringAsync(url);
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
 
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-            doc.LoadHtml(html);
+                string postData = "client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=refresh_token&refresh_token=" + refreshToken;
+                byte[] postDataBytes = System.Text.Encoding.ASCII.GetBytes(postData);
+                request.ContentLength = postDataBytes.Length;
 
-            HtmlNode node = doc.DocumentNode.SelectSingleNode("//*[@id='main-view']/div/div/div[1]/div/div[1]/div[2]/div/div/div[1]/div[3]/div[2]/div[1]/span/div");
+                Stream stream = request.GetRequestStream();
+                stream.Write(postDataBytes, 0, postDataBytes.Length);
+                stream.Close();
 
-            string textValue = node.InnerText;
-            MessageBox.Show(textValue);
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                StreamReader reader = new StreamReader(response.GetResponseStream());
+                string responseText = reader.ReadToEnd();
+
+                // extract new refresh token from response and set it to a new string variable
+                string new_access_token = "";
+                string new_expire = "";
+                // parse the response JSON to extract the new refresh token
+                // assume response looks like: {"access_token": "abc123", "refresh_token": "def456", "expires_in": 3600}
+                dynamic responseObject = Newtonsoft.Json.JsonConvert.DeserializeObject(responseText);
+                
+                if (responseObject.access_token != null)
+                {
+                    new_access_token = responseObject.access_token;
+                    RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
+                    key.SetValue("TwitchAccessToken", new_access_token);
+                    key.Close();
+                }
+                
+                if (responseObject.expires_in != null)
+                {
+                    new_expire = responseObject.expires_in;
+
+                    if (int.TryParse(new_expire, out int seconds))
+                    {
+                        DateTime current = DateTime.Now;
+                        DateTime future = current.AddSeconds(seconds);
+
+                        RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
+                        key.SetValue("ExpireDateTime", future);
+                        key.Close();
+                    }
+                    else
+                    {
+                        // Do nothing
+                    }
+                }
+
+                MessageBox.Show("Twitch Access Token Refreshed Successfully!\n\nAccess Token Expires at: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "ExpireDateTime", null));
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("ERROR: " + e.Message);
+            }
         }
-
         // Called every set interval to update viewer counts
         private void OnTimerElapsed(object sender, ElapsedEventArgs e)
         {
             UpdateYouTubeViewers();
             UpdateTwitchViewers();
-            UpdateKickViewers();
         }
         public static string GetChatZoomFactor(string ChatBox)
         {
@@ -716,10 +766,8 @@ namespace StreamChats
         }
         private void youTubeChannelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the YouTube channel URL.
             string channelURL = Microsoft.VisualBasic.Interaction.InputBox("Enter your YouTube channel URL\n\nCurrent YouTube Channel: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "YouTubeChannelURL", null), "YouTube Channel URL");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(channelURL))
             {
                 if (!channelURL.StartsWith("http://") && !channelURL.StartsWith("https://"))
@@ -744,10 +792,8 @@ namespace StreamChats
         }
         private void twitchChannelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the user's Twitch name
             string channelUrl = Microsoft.VisualBasic.Interaction.InputBox("Enter your Twitch name\n\nCurrent Twitch Channel: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "TwitchChannel", null), "Twitch Channel");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(channelUrl))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -760,10 +806,8 @@ namespace StreamChats
         }
         private void facebookChannelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the user's Facebook Page ID
             string facebookID = Microsoft.VisualBasic.Interaction.InputBox("Enter your Facebook Profile/Page ID\n\nCurrent Facebook ID: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "FacebookID", null), "Facebook ID");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(facebookID))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -776,10 +820,8 @@ namespace StreamChats
         }
         private void kickChannelToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the user's Twitch name
             string channelUrl = Microsoft.VisualBasic.Interaction.InputBox("Enter your Kick name\n\nCurrent Kick Channel: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "KickChannel", null), "Kick Channel");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(channelUrl))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -791,10 +833,8 @@ namespace StreamChats
         }
         private void youTubeAPIKeyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the YouTube channel URL.
             string YouTubeAPIKey = Microsoft.VisualBasic.Interaction.InputBox("Enter your YouTube API Key\n\nCurrent YouTube API Key: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "YouTubeAPIKey", null), "YouTube API Key");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(YouTubeAPIKey))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -804,10 +844,8 @@ namespace StreamChats
         }
         private void twitchAccessTokenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the YouTube channel URL.
-            string TwitchAccessTokenKey = Microsoft.VisualBasic.Interaction.InputBox("Enter your Twitch Access Token\n\nCurrent Twitch Access Token: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "TwitchAccessToken", null), "Twitch Access Token");
+            string TwitchAccessTokenKey = Microsoft.VisualBasic.Interaction.InputBox("Enter your Twitch Access Token\n\nCurrent Twitch Access Token: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "TwitchAccessToken", null) + "\n\nExpires At: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "ExpireDateTime", null), "Twitch Access Token");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(TwitchAccessTokenKey))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -817,10 +855,8 @@ namespace StreamChats
         }
         private void twitchClientIDToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the YouTube channel URL.
             string TwitchClientIDKey = Microsoft.VisualBasic.Interaction.InputBox("Enter your Twitch Client ID\n\nCurrent Twitch Client ID: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "TwitchClientID", null), "Twitch Client ID");
 
-            // If the user clicked the "OK" button and entered a URL, save it to the current user's local registry.
             if (!string.IsNullOrEmpty(TwitchClientIDKey))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -828,12 +864,69 @@ namespace StreamChats
                 key.Close();
             }
         }
+        private void twitchClientSecretToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string TwitchClientSecretKey = Microsoft.VisualBasic.Interaction.InputBox("Enter your Twitch Client Secret\n\nCurrent Twitch Client Secret: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "TwitchClientSecret", null), "Twitch Client Secret");
+
+            if (!string.IsNullOrEmpty(TwitchClientSecretKey))
+            {
+                RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
+                key.SetValue("TwitchClientSecret", TwitchClientSecretKey);
+                key.Close();
+            }
+        }
+        private void twitchRefreshTokenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string TwitchRefreshTokenKey = Microsoft.VisualBasic.Interaction.InputBox("Enter your Twitch Refresh Token\n\nCurrent Twitch Refresh Token: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "TwitchRefreshToken", null), "Twitch Refresh Token");
+
+            if (!string.IsNullOrEmpty(TwitchRefreshTokenKey))
+            {
+                RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
+                key.SetValue("TwitchRefreshToken", TwitchRefreshTokenKey);
+                key.Close();
+            }
+        }
+        private void refreshTwitchAccessTokenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
+            if (key != null)
+            {
+                // Check if the YouTubeChannelID value exists
+                if (key.GetValue("TwitchClientID") != null)
+                {
+                    if (key.GetValue("TwitchClientSecret") != null)
+                    {
+                        if (key.GetValue("TwitchAccessToken") != null)
+                        {
+                            if (key.GetValue("TwitchRefreshToken") != null)
+                            {
+                                GetTwitchRefreshToken();
+                            }
+                            else
+                            {
+                                MessageBox.Show("ERROR: Please enter your Twitch Refresh Token under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("ERROR: Please enter your Twitch Access Token under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("ERROR: Please enter your Twitch Client Secret under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("ERROR: Please enter your Twitch Client ID under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
         private void viewerAutoRefreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Display a message box to input the amount of time between YouTube Viewer Count refreshes
             string AutoRefresh = Microsoft.VisualBasic.Interaction.InputBox("Enter amount of time (in ms) between auto viewer count updates\n\nThe lower the time, the more API requests will be made. Don't go over your API limits.\n\nCurrent Time: " + (string)Registry.GetValue("HKEY_CURRENT_USER\\Software\\StreamChats", "ViewerRefreshTimer", null) + "ms", "Auto Refresh");
 
-            // If the user clicked the "OK" button
             if (!string.IsNullOrEmpty(AutoRefresh))
             {
                 RegistryKey key = Registry.CurrentUser.CreateSubKey("Software\\StreamChats");
@@ -845,13 +938,20 @@ namespace StreamChats
         }
         private void resetAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show("Do you want to reset all Stream Chat settings?\n\nThis includes all chat settings, accounts, and security\n(this data will be deleted from your computer)", "Reset", MessageBoxButtons.YesNo);
-            if (result == DialogResult.Yes)
+            DialogResult result1 = MessageBox.Show("Do you want to reset all Stream Chat settings?\n\nThis includes all chat settings, accounts, and security\n(this data will be deleted from your computer)", "Reset", MessageBoxButtons.YesNo);
+            if (result1 == DialogResult.Yes)
             {
                 RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\StreamChats", true);
                 if (key != null)
                 {
                     key.DeleteSubKeyTree("");
+                }
+
+                DialogResult result2 = MessageBox.Show("Would you like to restart the program?", "Reset", MessageBoxButtons.YesNo);
+                if (result2 == DialogResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(Application.ExecutablePath);
+                    this.Close();
                 }
             }
         }
@@ -859,7 +959,6 @@ namespace StreamChats
         {
             if (YouTubeViewers_Label.Text.Contains("*Click To Show Viewer Count*"))
             {
-                // Check if a YouTube channel exists
                 RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\StreamChats");
                 if (key != null)
                 {
@@ -928,37 +1027,56 @@ namespace StreamChats
                 {
                     if (key.GetValue("TwitchChannel") != null)
                     {
-                        if (key != null)
+                        if (key.GetValue("TwitchClientID") != null)
                         {
-                            bool twitchClientIDExists = Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchClientID", null) != null;
-                            bool twitchAccessTokenExists = Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchAccessToken", null) != null;
-                            if (twitchClientIDExists && twitchAccessTokenExists)
+                            if (key.GetValue("TwitchClientSecret") != null)
                             {
-                                // Check if Twitch channel is live
-                                int result = UpdateTwitchViewers();
-                                if (result == 0)
+                                if (key.GetValue("TwitchAccessToken") != null)
                                 {
-                                    MessageBox.Show("ERROR: Twitch channel (" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + ") is not live", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                }
-                                else
-                                {
-                                    TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font.FontFamily, 10, TwitchViewers_Label.Font.Style);
-                                    TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font, FontStyle.Regular);
-                                    UpdateTwitchViewers();
-                                    if (timer.Enabled)
+                                    if (key.GetValue("TwitchRefreshToken") != null)
                                     {
-                                        // Do nothing
+                                        int result = UpdateTwitchViewers();
+                                        if (result == 0)
+                                        {
+                                            MessageBox.Show("ERROR: Twitch channel (" + Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\StreamChats", "TwitchChannel", null) as string + ") is not live", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        }
+                                        else if (result == -2)
+                                        {
+                                            MessageBox.Show("ERROR: (403) UNAUTHORIZED - Please try refreshing your Twitch Access Token: Security -> Refresh Twitch Access Token", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        }
+                                        else
+                                        {
+                                            TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font.FontFamily, 10, TwitchViewers_Label.Font.Style);
+                                            TwitchViewers_Label.Font = new Font(TwitchViewers_Label.Font, FontStyle.Regular);
+                                            if (timer.Enabled)
+                                            {
+                                                // Do nothing
+                                            }
+                                            else
+                                            {
+                                                timer.Start();
+                                            }
+                                        }
                                     }
                                     else
                                     {
-                                        timer.Start();
+                                        MessageBox.Show("ERROR: Please enter your Twitch Refresh Token under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     }
                                 }
+                                else
+                                {
+                                    MessageBox.Show("ERROR: Please enter your Twitch Access Token under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+
                             }
                             else
                             {
-                                MessageBox.Show("ERROR: Please enter both your Twitch Access Token & Twitch Client ID under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("ERROR: Please enter your Twitch Client Secret under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
+                        }
+                        else
+                        {
+                            MessageBox.Show("ERROR: Please enter your Twitch Client ID under the Security tab", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                     else
@@ -989,9 +1107,9 @@ namespace StreamChats
         {
             if (KickViewers_Label.Text.Contains("*Click To Show Viewer Count*"))
             {
-                UpdateKickViewers();
+                // Need to add UpdateKickViewer method
             }
-            else if (YouTubeViewers_Label.Text.Contains("YouTube Viewers"))
+            else if (YouTubeViewers_Label.Text.Contains("Kick Viewers"))
             {
                 KickViewers_Label.Font = new Font(KickViewers_Label.Font.FontFamily, 9, KickViewers_Label.Font.Style);
                 KickViewers_Label.Font = new Font(KickViewers_Label.Font, FontStyle.Italic);

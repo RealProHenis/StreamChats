@@ -60,8 +60,11 @@
             this.kickChannelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.securityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.youTubeAPIKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.twitchAccessTokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.twitchClientIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.twitchClientSecretToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.twitchAccessTokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.twitchRefreshTokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.refreshTwitchAccessTokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoRefreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -325,8 +328,11 @@
             // 
             this.securityToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.youTubeAPIKeyToolStripMenuItem,
+            this.twitchClientIDToolStripMenuItem,
+            this.twitchClientSecretToolStripMenuItem,
             this.twitchAccessTokenToolStripMenuItem,
-            this.twitchClientIDToolStripMenuItem});
+            this.twitchRefreshTokenToolStripMenuItem,
+            this.refreshTwitchAccessTokenToolStripMenuItem});
             this.securityToolStripMenuItem.Name = "securityToolStripMenuItem";
             this.securityToolStripMenuItem.Size = new System.Drawing.Size(65, 21);
             this.securityToolStripMenuItem.Text = "Security";
@@ -334,23 +340,44 @@
             // youTubeAPIKeyToolStripMenuItem
             // 
             this.youTubeAPIKeyToolStripMenuItem.Name = "youTubeAPIKeyToolStripMenuItem";
-            this.youTubeAPIKeyToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
+            this.youTubeAPIKeyToolStripMenuItem.Size = new System.Drawing.Size(246, 24);
             this.youTubeAPIKeyToolStripMenuItem.Text = "YouTube API Key";
             this.youTubeAPIKeyToolStripMenuItem.Click += new System.EventHandler(this.youTubeAPIKeyToolStripMenuItem_Click);
-            // 
-            // twitchAccessTokenToolStripMenuItem
-            // 
-            this.twitchAccessTokenToolStripMenuItem.Name = "twitchAccessTokenToolStripMenuItem";
-            this.twitchAccessTokenToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
-            this.twitchAccessTokenToolStripMenuItem.Text = "Twitch Access Token";
-            this.twitchAccessTokenToolStripMenuItem.Click += new System.EventHandler(this.twitchAccessTokenToolStripMenuItem_Click);
             // 
             // twitchClientIDToolStripMenuItem
             // 
             this.twitchClientIDToolStripMenuItem.Name = "twitchClientIDToolStripMenuItem";
-            this.twitchClientIDToolStripMenuItem.Size = new System.Drawing.Size(198, 24);
+            this.twitchClientIDToolStripMenuItem.Size = new System.Drawing.Size(246, 24);
             this.twitchClientIDToolStripMenuItem.Text = "Twitch Client ID";
             this.twitchClientIDToolStripMenuItem.Click += new System.EventHandler(this.twitchClientIDToolStripMenuItem_Click);
+            // 
+            // twitchClientSecretToolStripMenuItem
+            // 
+            this.twitchClientSecretToolStripMenuItem.Name = "twitchClientSecretToolStripMenuItem";
+            this.twitchClientSecretToolStripMenuItem.Size = new System.Drawing.Size(246, 24);
+            this.twitchClientSecretToolStripMenuItem.Text = "Twitch Client Secret";
+            this.twitchClientSecretToolStripMenuItem.Click += new System.EventHandler(this.twitchClientSecretToolStripMenuItem_Click);
+            // 
+            // twitchAccessTokenToolStripMenuItem
+            // 
+            this.twitchAccessTokenToolStripMenuItem.Name = "twitchAccessTokenToolStripMenuItem";
+            this.twitchAccessTokenToolStripMenuItem.Size = new System.Drawing.Size(246, 24);
+            this.twitchAccessTokenToolStripMenuItem.Text = "Twitch Access Token";
+            this.twitchAccessTokenToolStripMenuItem.Click += new System.EventHandler(this.twitchAccessTokenToolStripMenuItem_Click);
+            // 
+            // twitchRefreshTokenToolStripMenuItem
+            // 
+            this.twitchRefreshTokenToolStripMenuItem.Name = "twitchRefreshTokenToolStripMenuItem";
+            this.twitchRefreshTokenToolStripMenuItem.Size = new System.Drawing.Size(246, 24);
+            this.twitchRefreshTokenToolStripMenuItem.Text = "Twitch Refresh Token";
+            this.twitchRefreshTokenToolStripMenuItem.Click += new System.EventHandler(this.twitchRefreshTokenToolStripMenuItem_Click);
+            // 
+            // refreshTwitchAccessTokenToolStripMenuItem
+            // 
+            this.refreshTwitchAccessTokenToolStripMenuItem.Name = "refreshTwitchAccessTokenToolStripMenuItem";
+            this.refreshTwitchAccessTokenToolStripMenuItem.Size = new System.Drawing.Size(246, 24);
+            this.refreshTwitchAccessTokenToolStripMenuItem.Text = "Refresh Twitch Access Token";
+            this.refreshTwitchAccessTokenToolStripMenuItem.Click += new System.EventHandler(this.refreshTwitchAccessTokenToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -591,5 +618,8 @@
         private ToolStripMenuItem kickChannelToolStripMenuItem;
         private ToolStripMenuItem openAccountDashboardsToolStripMenuItem;
         private ToolStripMenuItem facebookChannelToolStripMenuItem;
+        private ToolStripMenuItem refreshTwitchAccessTokenToolStripMenuItem;
+        private ToolStripMenuItem twitchClientSecretToolStripMenuItem;
+        private ToolStripMenuItem twitchRefreshTokenToolStripMenuItem;
     }
 }
