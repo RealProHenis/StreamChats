@@ -9,4 +9,6 @@ In order to get live viewer counts, you need your own YouTube Data v3 API Key (h
 
 -Facebook chat isn't auto integrated since that requires FB to review & approve my developer app which I haven't bothered to follow through on and tbh have no idea how to do. For now, manually paste your Facebook popout chat in text box, and then Chats -> Facebook Chats -> Go To URL
 
+-Kick Viewers doesn't do anything
+
 -The security on this is BAD. All data (including API keys & secrets) are stored in plain text in the current users registry editor. (Computer\HKEY_CURRENT_USER\Software\StreamChats) Once I learn how to do hash functions or whatever, I can improve this
