@@ -33,9 +33,9 @@ A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-
 - Then scroll down to the bottom of the page and click "Generate Token!"
 - You should get asked to authorize your Twitch account with the Twitch Developer App you created earlier. If that all matches, click "Authorize"
 - If you're successful, you should be redirected back to Twitch Token Generator and asked to verify the captcha
-- If you complete the captcha successfully, under the 'Generated Tokens" heading, you should see your newly generated "Access Token" and "Refresh Token"
+- If you complete the captcha successfully, under the "Generated Tokens" heading, you should see your newly generated "Access Token" and "Refresh Token"
 - Copy both the "Access Token" and "Refresh Token" from Twitch Token Generator, and paste it into StreamChats -> Security -> Twitch Access Token/Twitch Refresh Token
-- Once that's done, you're all set! You should now be able to click to see your Twitch viewer count
+- Once that's done, you're all set! You should now be able to click to see your Twitch viewer count when your channel is live
 - Please note that the Twitch Access Token you generated only lasts 4 hours. When it expires, you will have to click Security -> Refresh Access Token
 
 # Known Issues:
