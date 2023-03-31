@@ -1,9 +1,9 @@
-## StreamChats
+# StreamChats
 A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-side to easily read when multistreaming. I hate the lack of customization on alternative restreaming chat programs, so I decided to make this instead
 
-## Optional Features:
+# Optional Features:
 
-# To get live viewer counts for YouTube, you need your own YouTube API Key. Follow the instructions below:
+## To get live viewer counts for YouTube, you need your own YouTube API Key. Follow the instructions below:
 
 - Go to https://console.cloud.google.com
 - Click "Select a project" dropdown in the upper left, then click "New Project" (call it whatever you want)
@@ -20,7 +20,7 @@ A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-
 
 
 
-## Known Issues:
+# Known Issues:
 
 -Facebook chat isn't auto integrated since that requires FB to review & approve my developer app which I haven't bothered to follow through on and tbh have no idea how to do. For now, manually paste your Facebook popout chat in text box, and then Chats -> Facebook Chats -> Go To URL
 
