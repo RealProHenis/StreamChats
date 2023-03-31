@@ -4,7 +4,6 @@ A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-
 ## Optional Features:
 
 # To get live viewer counts for YouTube, you need your own YouTube API Key. Follow the instructions below:
-- Get a YouTube API Key from here: https://console.cloud.google.com (a YouTube Data v3 API Key is required to check a user's subscription status)
     - Go to https://console.cloud.google.com
     - Click "Select a project" dropdown in the upper left, then click "New Project" (call it whatever you want)
     - Wait for project to be created, then click "Select Project"
@@ -14,7 +13,7 @@ A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-
     - Click "Enable" and wait for the API to be enabled
     - Click the "Credentials" tab on the left sidebar (under APIs & Services)
     - Click "Create Credentials" at the top, then click "API key"
-    - Once your API Key is created, copy it and enter it into the YouTube API Key field of the YouTube Sub Age script settings in Streamlabs Chatbot
+    - Once your API Key is created, copy it and go to Stream Chats -> Security -> YouTube API Key and paste it
 
 (https://console.cloud.google.com/apis/api/youtube.googleapis.com/metrics) and your own Twitch Access Token & Twitch Client Secret. (https://dev.twitch.tv/console, https://twitchtokengenerator.com)
 
