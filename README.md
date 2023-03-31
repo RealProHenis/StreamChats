@@ -15,9 +15,8 @@ A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-
 - Click "Create Credentials" at the top, then click "API key"
 - Once your API Key is created, copy it and go to Stream Chats -> Security -> YouTube API Key and paste it
 
-(https://console.cloud.google.com/apis/api/youtube.googleapis.com/metrics) and your own Twitch Access Token & Twitch Client Secret. (https://dev.twitch.tv/console, https://twitchtokengenerator.com)
-
-
+### To get live viewer counts for Twitch, you need your own Twitch App. Follow the instructions below:
+(https://dev.twitch.tv/console, https://twitchtokengenerator.com)
 
 # Known Issues:
 
