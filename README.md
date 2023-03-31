@@ -15,7 +15,7 @@ A simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-side 
 - Click "Create Credentials" at the top, then click "API key"
 - Once your API Key is created, copy it and go to Stream Chats -> Security -> YouTube API Key and paste it
 
-### To get live viewer counts for Twitch, you need your own Twitch App. Follow the instructions below:
+### To get live viewer counts for Twitch, you need your own Twitch Developer Application. Follow the instructions below:
 
 - Go to https://dev.twitch.tv/console and login with your Twitch account
 - Click "Register Your Application"
