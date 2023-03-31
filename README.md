@@ -20,7 +20,7 @@ A very simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-
 - Go to https://dev.twitch.tv/console and login with your Twitch account
 - Click "Register Your Application"
 - Under the name field, enter anything you want (Twitch Application names must be unqiue)
-- Add this OAuth Redirect URL: "https://twitchtokengenerator.com"
+- Add this OAuth Redirect URL: https://twitchtokengenerator.com
 - Under Category, choose "Application Integration"
 - Click "Create" and you should be redirected to your Developer Applications page
 - Click "Manage" for the application you just created
