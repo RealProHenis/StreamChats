@@ -44,4 +44,4 @@ A simple program that puts YouTube, Twitch, Facebook, & Kick chats side-by-side 
 
 -Can't get Kick viewer count
 
--All data (including API keys & secrets) are stored in plain text in the current users registry editor. (Computer\HKEY_CURRENT_USER\Software\StreamChats) Once I learn how to do hash functions or whatever, I can improve this
+-All data (including API keys & secrets) are stored in plain text in the current users registry editor. (Computer\HKEY_CURRENT_USER\Software\StreamChats) Once I learn how to improve this security, I'll release an update
